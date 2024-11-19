@@ -163,7 +163,7 @@
             const settings = getCustomSettings(); // 获取用户输入的自定义设置
 
             try {
-                const response = await fetch('https://gpjd.wufeng0325.workers.dev/', { // 替换为您的后端API地址
+                const response = await fetch('https://gpjd.wufeng0325.workers.dev/api/data', { // 替换为您的后端API地址
                     method: 'POST', // 确保使用 POST 方法
                     headers: {
                         'Content-Type': 'application/json',
