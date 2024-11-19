@@ -60,6 +60,10 @@
         .hidden {
             display: none; /* 隐藏元素 */
         }
+        .success-message {
+            color: green;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
@@ -114,6 +118,9 @@
 
         <button id="updateSettingsBtn">更新设置</button>
         <button id="fetchDataBtn">获取当前设置</button>
+
+        <!-- 成功提示信息 -->
+        <div id="successMessage" class="success-message hidden"></div>
     </div>
 
     <script>
@@ -148,7 +155,6 @@
                 proxyMethod: document.getElementById('proxyMethod').value,
                 PROXYIP: document.getElementById('PROXYIP').value,
                 SOCKS5: document.getElementById('SOCKS5').value,
-                // 其他字段...
             };
         }
 
@@ -157,7 +163,7 @@
             const settings = getCustomSettings(); // 获取用户输入的自定义设置
 
             try {
-                const response = await fetch('https://https://gpjd.wufeng0325.workers.dev/api/data', { // 替换为您的后端API地址
+                const response = await fetch('https://yourworkername.yourdomain.workers.dev/api/data', { // 替换为您的后端API地址
                     method: 'POST', // 确保使用 POST 方法
                     headers: {
                         'Content-Type': 'application/json',
@@ -171,6 +177,11 @@
 
                 const data = await response.json();
                 console.log(data.message); // 输出来自后端的消息
+
+                // 显示成功提示
+                const successMessage = document.getElementById('successMessage');
+                successMessage.textContent = '设置已成功更新！';
+                successMessage.classList.remove('hidden'); // 显示提示信息
             } catch (error) {
                 console.error('错误:', error.message);
             }
@@ -179,7 +190,7 @@
         // 获取当前设置按钮事件
         document.getElementById('fetchDataBtn').addEventListener('click', async () => {
             try {
-                const response = await fetch('https://yourworkername.yourdomain.workers.dev/api/data'); // 替换为您的后端API地址
+                const response = await fetch('https://gpjd.wufeng0325.workers.dev/api/data'); // 替换为您的后端API地址
                 if (!response.ok) throw new Error('网络响应不正常');
 
                 const data = await response.json();
@@ -191,7 +202,6 @@
                 document.getElementById('UPTIME').value = data.UPTIME || '';
                 document.getElementById('PROXYIP').value = data.PROXYIP || '';
                 document.getElementById('SOCKS5').value = data.SOCKS5 || '';
-                // 其他字段...
             } catch (error) {
                 console.error('错误:', error.message);
             }
