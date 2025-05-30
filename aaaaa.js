@@ -20,7 +20,7 @@ const urls = urlString
   .map(url => url.trim()) // 去除每个URL两端的空白字符
   .filter(url => url && (url.startsWith('http://') || url.startsWith('https://'))); // 确保URL不为空且以 http(s):// 开头
 
-const TIMEOUT = 10000; // 请求超时时间（毫秒），例如 10000ms = 10秒
+const TIMEOUT = 30000; // 请求超时时间（毫秒），例如 10000ms = 10秒
 const USER_AGENT = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36 QinglongPanel-KeepAliveJS/1.0';
 
 // --- 配置区结束 ---
