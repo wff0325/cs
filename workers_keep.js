@@ -1,5 +1,5 @@
 // 每个保活网页之间用空格或者，或者,间隔开，网页前带https://
-const urlString = 'https://fl.opb.dpdns.org/65abc702-dde4-4e84-8244-e79273981297,https://am.opb.dpdns.org/f8ff1eb2-97c1-4469-ebe1-8f13293ddcb6,https://liii.zabc.net,https://dingyue.zabc.net,https://llli.zabc.net,https://lljj.zabc.net,https://sasa.zabc.net'; // 你可以修改这里，或者使用环境变量
+const urlString = 'https://fl.opb.dpdns.org/65abc702-dde4-4e84-8244-e79273981297,https://am.opb.dpdns.org/f8ff1eb2-97c1-4469-ebe1-8f13293ddcb6,https://liii.zabc.net/,https://dingyue.zabc.net/,https://llli.zabc.net/,https://lljj.zabc.net/,https://sasa.zabc.net/'; // 你可以修改这里，或者使用环境变量
 const urls = urlString.split(/[\s,，]+/).filter(url => url.startsWith('http')); // 确保分割后是有效的URL前缀
 const TIMEOUT = 5000; // 5 秒
 
