@@ -7,7 +7,7 @@
 
 // 优先从环境变量 KEEPALIVE_JS_URLS 读取URL列表
 const urlsEnv = process.env.KEEPALIVE_JS_URLS;
-const defaultUrlString = 'https://liii.zabc.net,https://dingyue.zabc.net,https://llli.zabc.net,https://lljj.zabc.net,https://sasa.zabc.net';
+const defaultUrlString = 'https://liii.zabc.net,https://dingyue.zabc.net,https://llli.zabc.net,https://sasa.zabc.net';
 // const defaultUrlString = 'https://liii.zabc.net,https://dingyue.zabc.net,https://llli.zabc.net,https://lljj.zabc.net,https://sasa.zabc.net,https://fl.opb.dpdns.org/65abc702-dde4-4e84-8244-e79273981297,https://am.opb.dpdns.org/f8ff1eb2-97c1-4469-ebe1-8f13293ddcb6';
 
 const urlString = urlsEnv || defaultUrlString;
