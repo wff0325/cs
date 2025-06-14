@@ -16,60 +16,30 @@ import time
 import base64
 import requests
 import os
-import html  # <--- [新] 引入标准HTML转义库
+import html  # <-- 保留这个修复
 from bs4 import BeautifulSoup
 
 # =====================================================================================
-# 读取环境变量中的配置，如果环境变量不存在，则使用冒号后的默认值（建议在青龙面板配置环境变量）
+# 配置部分，保持不变
 # =====================================================================================
-
-# 账户信息：用户名和密码 (多个账号请用空格隔开)
-# 青龙环境变量名称: EUSERV_USERNAME
 USERNAME = os.getenv('EUSERV_USERNAME', '改为你的EUserV客户ID 或 邮箱')
-# 青龙环境变量名称: EUSERV_PASSWORD
 PASSWORD = os.getenv('EUSERV_PASSWORD', '改为你的EUserV的密码')
-
-# TrueCaptcha API 配置 (申请地址: https://truecaptcha.org/)
-# 青龙环境变量名称: TRUECAPTCHA_USERID
 TRUECAPTCHA_USERID = os.getenv('TRUECAPTCHA_USERID', '改为你的TrueCaptcha UserID')
-# 青龙环境变量名称: TRUECAPTCHA_APIKEY
 TRUECAPTCHA_APIKEY = os.getenv('TRUECAPTCHA_APIKEY', '改为你的TrueCaptcha APIKEY')
-
-# Mailparser 配置 (多个ID请用空格隔开, 顺序必须与账号对应)
-# 青龙环境变量名称: MAILPARSER_DOWNLOAD_URL_ID
 MAILPARSER_DOWNLOAD_URL_ID = os.getenv('MAILPARSER_DOWNLOAD_URL_ID', '改为你的Mailparser下载URL的最后几位')
-MAILPARSER_DOWNLOAD_BASE_URL = "https://files.mailparser.io/d/" # 无需更改除非你要反代
-
-# Telegram Bot 推送配置
-# 青龙环境变量名称: TG_BOT_TOKEN
+MAILPARSER_DOWNLOAD_BASE_URL = "https://files.mailparser.io/d/"
 TG_BOT_TOKEN = os.getenv('TG_BOT_TOKEN', "改为你的Telegram机器人Token")
-# 青龙环境变量名称: TG_USER_ID
 TG_USER_ID = os.getenv('TG_USER_ID', "改为你的用户ID")
-# 青龙环境变量名称: TG_API_HOST (可选, 用于反代Telegram API)
 TG_API_HOST = os.getenv('TG_API_HOST', "https://api.telegram.org")
-
-# 代理设置 (如果需要)
-# 青龙环境变量名称: PROXY_URL, 例如: http://127.0.0.1:10808
 proxy_url = os.getenv('PROXY_URL')
 PROXIES = {"http": proxy_url, "https": proxy_url} if proxy_url else None
-
-# =====================================================================================
-# 以下为脚本核心代码，通常无需修改
 # =====================================================================================
 
-# 最大登录重试次数
 LOGIN_MAX_RETRY_COUNT = 5
-# 接收 PIN 的等待时间，单位为秒
 WAITING_TIME_OF_PIN = 15
-# 是否检查验证码解决器的使用情况
 CHECK_CAPTCHA_SOLVER_USAGE = True
-
-user_agent = (
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-    "Chrome/95.0.4638.69 Safari/537.36"
-)
-
-desp = ""  # 日志信息
+user_agent = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) " "Chrome/95.0.4638.69 Safari/537.36")
+desp = ""
 
 def log(info: str):
     emoji_map = {
@@ -86,7 +56,6 @@ def log(info: str):
     global desp
     desp += info + "\n\n"
 
-# 登录重试装饰器
 def login_retry(*args, **kwargs):
     def wrapper(func):
         def inner(username, password):
@@ -108,7 +77,6 @@ def login_retry(*args, **kwargs):
         return inner
     return wrapper
 
-# 验证码解决器
 def captcha_solver(captcha_image_url: str, session: requests.session) -> dict:
     response = session.get(captcha_image_url, proxies=PROXIES)
     encoded_string = base64.b64encode(response.content)
@@ -117,77 +85,99 @@ def captcha_solver(captcha_image_url: str, session: requests.session) -> dict:
     r = requests.post(url=url, json=data, proxies=PROXIES)
     return r.json()
 
-# 处理验证码解决结果
 def handle_captcha_solved_result(solved: dict) -> str:
     if "result" in solved:
         text = solved["result"]
         if "RESULT  IS" in text:
             log("[Captcha Solver] 使用的是演示 apikey。")
-            text = re.search(r"RESULT  IS . (.*) .", text).group(1)
+            match = re.search(r"RESULT  IS . (.*) .", text)
+            text = match.group(1) if match else ""
         else:
             log("[Captcha Solver] 使用的是您自己的 apikey。")
         operators = {"X": "*", "x": "*", "+": "+", "-": "-"}
         for op, symbol in operators.items():
             if op in text:
                 try:
-                    left, right = map(str.strip, text.split(op))
+                    left, right = map(str.strip, text.split(op, 1))
                     if left.isdigit() and right.isdigit():
                         return str(eval(f"{left} {symbol} {right}"))
-                except ValueError:
+                except (ValueError, TypeError):
                     continue
         return text
     else:
         log(f"[Captcha Solver] 验证码解析结果异常: {solved}")
         raise KeyError("未找到解析结果。")
 
-# 获取验证码解决器使用情况
 def get_captcha_solver_usage() -> dict:
     url = "https://api.apitruecaptcha.org/one/getusage"
     params = {"username": TRUECAPTCHA_USERID, "apikey": TRUECAPTCHA_APIKEY}
     r = requests.get(url=url, params=params, proxies=PROXIES)
     return r.json()
 
-# 从 Mailparser 获取 PIN
 def get_pin_from_mailparser(url_id: str) -> str:
     response = requests.get(f"{MAILPARSER_DOWNLOAD_BASE_URL}{url_id}", proxies=PROXIES)
     return response.json()[0]["pin"]
 
-# 登录函数
+# ========================================================================
+# vvvvvvvvvvvv   将 LOGIN 函数恢复到之前能工作的版本   vvvvvvvvvvvv
+# ========================================================================
 @login_retry(max_retry=LOGIN_MAX_RETRY_COUNT)
 def login(username: str, password: str) -> (str, requests.session):
     headers = {"user-agent": user_agent, "origin": "https://www.euserv.com"}
     url = "https://support.euserv.com/index.iphp"
     captcha_image_url = "https://support.euserv.com/securimage_show.php"
     session = requests.Session()
+
     sess = session.get(url, headers=headers, proxies=PROXIES)
-    sess_id = re.search("PHPSESSID=(\\w{10,100});", str(sess.headers)).group(1)
-    login_data = {"email": username, "password": password, "form_selected_language": "en", "Submit": "Login", "subaction": "login", "sess_id": sess_id}
+    # 使用之前更健壮的 findall 方法
+    sess_ids = re.findall("PHPSESSID=(\\w{10,100});", str(sess.headers))
+    if not sess_ids:
+        log("无法获取 PHPSESSID，登录失败。")
+        return "-1", session
+    sess_id = sess_ids[0]
+    
+    session.get("https://support.euserv.com/pic/logo_small.png", headers=headers, proxies=PROXIES)
+
+    login_data = {
+        "email": username, "password": password, "form_selected_language": "en",
+        "Submit": "Login", "subaction": "login", "sess_id": sess_id,
+    }
     f = session.post(url, headers=headers, data=login_data, proxies=PROXIES)
     f.raise_for_status()
 
-    if "Confirm or change your customer data here" in f.text:
-        return sess_id, session
-    if "To finish the login process please solve the following captcha." in f.text:
-        log("[Captcha Solver] 正在进行验证码识别...")
-        solved_result = captcha_solver(captcha_image_url, session)
-        captcha_code = handle_captcha_solved_result(solved_result)
-        log(f"[Captcha Solver] 识别的验证码是: {captcha_code}")
-        if CHECK_CAPTCHA_SOLVER_USAGE and "demo" not in TRUECAPTCHA_APIKEY:
-            try:
-                usage = get_captcha_solver_usage()
-                log(f"[Captcha Solver] 当前日期 {usage[0]['date']} API 使用次数: {usage[0]['count']}")
-            except Exception as e:
-                log(f"[Captcha Solver] 查询API用量失败: {e}")
-        f2 = session.post(url, headers=headers, proxies=PROXIES, data={"subaction": "login", "sess_id": sess_id, "captcha_code": captcha_code})
-        if "To finish the login process please solve the following captcha." not in f2.text:
-            log("[Captcha Solver] 验证通过")
-            return sess_id, session
-        else:
-            log("[Captcha Solver] 验证失败")
+    # 使用之前能工作的逻辑判断结构
+    if "Hello" not in f.text and "Confirm or change your customer data here" not in f.text:
+        if "To finish the login process please solve the following captcha." not in f.text:
             return "-1", session
-    return "-1", session
+        else:
+            log("[Captcha Solver] 正在进行验证码识别...")
+            solved_result = captcha_solver(captcha_image_url, session)
+            captcha_code = handle_captcha_solved_result(solved_result)
+            log(f"[Captcha Solver] 识别的验证码是: {captcha_code}")
 
-# 获取服务器列表
+            if CHECK_CAPTCHA_SOLVER_USAGE and "demo" not in TRUECAPTCHA_APIKEY:
+                try:
+                    usage = get_captcha_solver_usage()
+                    log(f"[Captcha Solver] 当前日期 {usage[0]['date']} API 使用次数: {usage[0]['count']}")
+                except Exception as e:
+                    log(f"[Captcha Solver] 查询API用量失败: {e}")
+
+            f2 = session.post(
+                url, headers=headers, proxies=PROXIES,
+                data={ "subaction": "login", "sess_id": sess_id, "captcha_code": captcha_code, }
+            )
+            if "To finish the login process please solve the following captcha." not in f2.text:
+                log("[Captcha Solver] 验证通过")
+                return sess_id, session
+            else:
+                log("[Captcha Solver] 验证失败")
+                return "-1", session
+    else:
+        return sess_id, session
+# ========================================================================
+# ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+# ========================================================================
+
 def get_servers(sess_id: str, session: requests.session) -> {}:
     d = {}
     url = f"https://support.euserv.com/index.iphp?sess_id={sess_id}"
@@ -204,7 +194,6 @@ def get_servers(sess_id: str, session: requests.session) -> {}:
         d[server_id] = "Contract extension possible from" not in action_container.get_text()
     return d
 
-# 续期操作
 def renew(sess_id: str, session: requests.session, order_id: str, mailparser_dl_url_id: str) -> bool:
     url = "https://support.euserv.com/index.iphp"
     headers = {"user-agent": user_agent, "Host": "support.euserv.com", "origin": "https://support.euserv.com", "Referer": "https://support.euserv.com/index.iphp"}
@@ -228,7 +217,6 @@ def renew(sess_id: str, session: requests.session, order_id: str, mailparser_dl_
     time.sleep(5)
     return True
 
-# 检查续期状态
 def check(sess_id: str, session: requests.session):
     log("[AutoEUServerless] 正在检查续期后的状态...")
     d = get_servers(sess_id, session)
@@ -240,12 +228,9 @@ def check(sess_id: str, session: requests.session):
     if all_ok:
         log("[AutoEUServerless] 所有工作完成！尽情享受~")
 
-# 发送 Telegram 通知
+# --- 保留修复好的 Telegram 函数 ---
 def telegram():
-    # --- 最终修复 ---
-    # 使用 html.escape() 对日志内容进行完全转义，并用 <pre> 标签包裹以优化格式
     safe_desp = html.escape(desp)
-
     message = (
         "<b>AutoEUServerless 日志</b>\n\n"
         f"<pre>{safe_desp}</pre>"
