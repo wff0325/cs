@@ -44,7 +44,8 @@ MAILPARSER_DOWNLOAD_BASE_URL = "https://files.mailparser.io/d/" # 无需更改�
 TG_BOT_TOKEN = os.getenv('TG_BOT_TOKEN', "改为你的Telegram机器人Token")
 # 青龙环境变量名称: TG_USER_ID
 TG_USER_ID = os.getenv('TG_USER_ID', "改为你的用户ID")
-TG_API_HOST = "https://api.telegram.org"
+# 青龙环境变量名称: TG_API_HOST (可选, 用于反代Telegram API)
+TG_API_HOST = os.getenv('TG_API_HOST', "https://api.telegram.org")
 
 # 代理设置 (如果需要)
 # 青龙环境变量名称: PROXY_URL, 例如: http://127.0.0.1:10808
