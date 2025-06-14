@@ -303,8 +303,13 @@ def check(sess_id: str, session: requests.session):
 
 # 发送 Telegram 通知
 def telegram():
+    # ==================== FIX STARTS HERE ====================
+    # 为防止HTML解析错误，对日志内容进行转义
+    safe_desp = desp.replace("&", "&").replace("<", "<").replace(">", ">")
+    # ====================  FIX ENDS HERE  ====================
+
     message = (
-        "<b>AutoEUServerless 日志</b>\n\n" + desp +
+        "<b>AutoEUServerless 日志</b>\n\n" + safe_desp + # 使用转义后的安全日志内容
         "\n<b>版权声明：</b>\n"
         "本脚本基于 GPL-3.0 许可协议，版权所有。\n\n"
         "<b>致谢：</b>\n"
