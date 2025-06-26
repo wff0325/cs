@@ -2,7 +2,7 @@
 const KEEPALIVE_URLS_ENV = process.env.KEEPALIVE_URLS; // 从环境变量读取URL列表
 
 // 你可以修改这里的默认URL，或者通过环境变量 KEEPALIVE_URLS 来配置
-const defaultUrlString = 'https://fl.opb.dpdns.org/65abc702-dde4-4e84-8244-e79273981297,https://fl2.opb.dpdns.org/e9ef74e7-7163-4d83-8b09-620418ee855a';
+const defaultUrlString = 'https://fl.opb.dpdns.org/65abc702-dde4-4e84-8244-e79273981297,https://fl2.opb.dpdns.org/e9ef74e7-7163-4d83-8b09-620418ee855a,https://japan.opb.dpdns.org/c57ab42c-723e-4e01-9d77-b22abf2e75a0';
 const urlString = KEEPALIVE_URLS_ENV || defaultUrlString;
 
 const urls = urlString
